@@ -1,5 +1,6 @@
 package org.acme;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
@@ -49,12 +50,12 @@ public class EventResource {
 	@Path("event/{name}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Event createEvent(@PathParam("name") String name) {
-		
+
 		var event = new Event();
 		event.setName(name);
-		
+
 		eventsProducer.send(new ProducerRecord<>(topicEvents, name, event));
-		
+
 		return event;
 	}
 
@@ -62,13 +63,13 @@ public class EventResource {
 	@Path("event/{name}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Event deleteEvent(@PathParam("name") String name) {
-		
+
 		var event = new Event();
 		event.setName(name);
 		event.setDeleteEvent(true);
-		
+
 		eventsProducer.send(new ProducerRecord<>(topicEvents, name, event));
-		
+
 		return event;
 	}
 
@@ -80,9 +81,9 @@ public class EventResource {
 		if (readinessCheck.isRunning()) {
 			try {
 				var list = store.get(name);
-				return Objects.isNull(list) ?
-						Response.status(Status.NOT_FOUND).entity(Map.of("error", "not found")).build() :
-						Response.ok().entity(list).build();
+				return Response.ok()
+						.entity(Map.of(name, Objects.isNull(list) ? Collections.emptyList() : list))
+						.build();
 			} catch (InvalidStateStoreException ignored) {
 			}
 		}
